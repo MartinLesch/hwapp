@@ -1,0 +1,11 @@
+<#if licenseFirst??>
+${licenseFirst}
+</#if>
+${licensePrefix}(C) VIF3 - Email: info@bbs2-leer.de
+${licensePrefix}Diese Software kann frei genutzt werden. Auch gegen die Bearbeitung und
+${licensePrefix}Aenderung des Quellcodes spricht nichts. Wer Verbesserungen vornimmt oder  
+${licensePrefix}Fehler findet: Wir freuen uns ueber Feedback! Gerne auch in Form von Kritik.
+${licensePrefix}Bitte diesen Vermerk nicht loeschen!
+<#if licenseLast??>
+${licenseLast}
+</#if>
