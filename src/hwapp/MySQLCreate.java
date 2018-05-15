@@ -50,9 +50,16 @@ public class MySQLCreate {
                 + "`userName` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL, "
                 + "`userVorname` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL, "
                 + "`userPasswort` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL, "
-                + "`userIMEI` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL, "
+    //            + "`userIMEI` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL, "
                 + "`userDarfMMC` tinyint unsigned DEFAULT NULL, "
                 + "PRIMARY KEY (`userID`) )"
+                );
+
+        mySQLCreateTables.doUpdate("CREATE TABLE IF NOT EXISTS `devices` "
+                + "(`deviceID` int(10) unsigned NOT NULL AUTO_INCREMENT, "
+                + "`deviceIMEI` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL, "
+                + "`deviceUserID` int(10) unsigned DEFAULT NULL, "
+                + "PRIMARY KEY (`deviceID`) )"
                 );
 
         mySQLCreateTables.doUpdate("CREATE TABLE IF NOT EXISTS `status` "

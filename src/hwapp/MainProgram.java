@@ -22,10 +22,10 @@ public class MainProgram {
         Logger logger = new Logger(LoggingLevel.WARNING, true, true , true, false, true, false);
         //Tools tools = new Tools(logger);
         
-        //MySQLCreate createDB = new MySQLCreate(logger);
-        //createDB.createDatabase();
-        //createDB.createTables();
-        //createDB = null;
+        MySQLCreate createDB = new MySQLCreate(logger);
+        createDB.createDatabase();
+        createDB.createTables();
+        createDB = null;
         
         ImportUser imU = new ImportUser(logger);
         imU.getUserData();

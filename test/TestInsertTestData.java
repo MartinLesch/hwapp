@@ -13,7 +13,8 @@ import hwapp.MySQL;
 
 /**
  *
- * @author Computer
+ * @author Martin Lesch
+ * @version 15.05.2018
  */
 public class TestInsertTestData {
 
@@ -29,8 +30,12 @@ public class TestInsertTestData {
         MySQL mySQL = new MySQL(logger, "localhost", 3306, dbn, user, passwort);
         mySQL.connect();
         
-        mySQL.doUpdate("INSERT INTO users VALUES (NULL, 'mm@xyz.de', 'Mustermann', 'Max', 'geheim', '1234567890ABCDEFGHIJKLMNOPQERSTUVWXYZ', 1)");
-        mySQL.doUpdate("INSERT INTO users VALUES (NULL, 'mm@xyz.de', 'Musterfrau', 'Maria', 'passwort', 'abcdefghijklmnopqrstuvwxyzÄÖÜäöüß²#+-.,<', 0)");
+        mySQL.doUpdate("INSERT INTO users VALUES (NULL, 'mm@xyz.de', 'Mustermann', 'Max', 'geheim', 1)");
+        mySQL.doUpdate("INSERT INTO users VALUES (NULL, 'mm@xyz.de', 'Musterfrau', 'Maria', 'passwort', 0)");
+
+        // IMEI aus User entfernt, eigene Tabelle mit IMEI
+        mySQL.doUpdate("INSERT INTO devices VALUES (NULL, '1234567890ABCDEFGHIJKLMNOPQERSTUVWXYZ', 1)");
+        mySQL.doUpdate("INSERT INTO devices VALUES (NULL, 'abcdefghijklmnopqrstuvwxyzÄÖÜäöüß²#+-.,<', 2)");
 
         mySQL.doUpdate("INSERT INTO status VALUES (NULL, 'offen')");
         mySQL.doUpdate("INSERT INTO status VALUES (NULL, 'erledigt')");
