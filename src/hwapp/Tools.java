@@ -21,6 +21,13 @@ public class Tools {
         this.logger = logger;
     }
 
+    public String getTimeStamp(String fromWhere) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        Date date = new Date();
+        String dateTime = sdf.format(date);
+        return dateTime;
+    }
+
     public Date tryParseDateYyyyMMdd(String dateAsString, String fromWhere) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
         Date date = null;
@@ -35,6 +42,23 @@ public class Tools {
         }
         return date;
     }
+
+    public String tryParseDateYyyyMMddToDateTime(String dateAsString, String fromWhere) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        String dateTime = null;
+        Date date = null;
+        if (dateAsString != null){
+            try {
+                date = sdf.parse(dateAsString);
+            } catch (ParseException e) {
+                //e.printStackTrace();
+                logger.addToLogFile(this.getClass().getSimpleName(), "Umwandlung zu Datum 'yyyyMMdd' fehlgeschlagen: " + fromWhere + " Inhalt: " + dateAsString, LoggingLevel.ERROR);
+                //System.out.println("Umwandlung zu Datum 'yyyyMMdd' fehlgeschlagen: " + fromWhere + " Inhalt: " + dateAsString);
+            }
+        }
+        dateTime = dateToDateTime(date);
+        return dateTime;
+    }
     
     public String dateToDateTime(Date date){
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -43,7 +67,8 @@ public class Tools {
         } else {
             String dateTime = sdf.format(date);
             return dateTime;
-    }}
+        }
+    }
 
     public Date tryParseDateYMDwithHyphen(String dateAsString, String fromWhere) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
