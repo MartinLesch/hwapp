@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 /**
  * @author Martin Lesch
- * @version 18.05.2018
+ * @version 12.06.2018
  */
 public class DataHandler {
     private String host;
@@ -22,6 +22,7 @@ public class DataHandler {
     private String password;
     private hwapp.Logger logger;
     private MySQL mySQL;
+    private hwapp.Tools tools;
 
   /**
     * @param logger Es ist zwingend ein Logger erforderlich
@@ -50,6 +51,8 @@ public class DataHandler {
         
         this.mySQL = new MySQL(this.logger, this.host, this.port, this.databaseName, this.user, this.password);
         this.logger.addToLogFile(this.getClass().getSimpleName(), "Daten Handler wurde initialisiert. Host: " + this.host +" - Datenbank: " + this.databaseName + " - Benutzer: " + this.user, LogLevel.LoggingLevel.DEBUG);
+        this.tools = new Tools(this.logger);
+        
     }
 
   /**
@@ -101,7 +104,8 @@ public class DataHandler {
             }
         return rs;
     }
-  /**
+
+    /**
     * @return Es werden alle Datensaetze der Tabelle users in einem StringArray zuruck gegeben.
     */
     public String[][] getAllUserAsStringArray(){
@@ -178,8 +182,145 @@ public class DataHandler {
                 resultString = this.mySQL.changeResultSetToStringArray(this.mySQL.doQuery("SELECT * FROM devices WHERE deviceUserID = " + userID));
                 this.mySQL.disconnect();
             } else {
-                this.logger.addToLogFile(this.getClass().getSimpleName(), "Lesen in devices nicht moeglich ... Verbindung zur Datenbank nicht gelungen.", LogLevel.LoggingLevel.ERROR);
+                this.logger.addToLogFile(this.getClass().getSimpleName(), "Lesen in devices (UserID) nicht moeglich ... Verbindung zur Datenbank nicht gelungen.", LogLevel.LoggingLevel.ERROR);
             }
         return resultString;
     }
+
+    /**
+    * @param IMEI IMEI des Mobilgeraetes
+    * @return Gibt den UserID zurueck der zu dieser IMEI gehoert
+    */
+    public int getUserForThisIMEI(String IMEI) {
+        String resultString [][] = null;
+        int resultInt;
+        this.logger.addToLogFile(this.getClass().getSimpleName(), "Lese IMEI = " + IMEI + " ... und gebe den UserID zurueck." , LogLevel.LoggingLevel.DEBUG);
+        this.mySQL.connect();
+            if(this.mySQL.isConnected()){
+                resultString = this.mySQL.changeResultSetToStringArray(this.mySQL.doQuery("SELECT deviceUserId FROM devices WHERE deviceIMEI = " + IMEI));
+               this.mySQL.disconnect();
+            } else {
+                this.logger.addToLogFile(this.getClass().getSimpleName(), "Lesen in devices (IMEI) nicht moeglich ... Verbindung zur Datenbank nicht gelungen.", LogLevel.LoggingLevel.ERROR);
+            }
+        resultInt = tools.tryParseInt(resultString[0][0], "getUserForThisIMEI");
+        return resultInt;
+    }
+    
+    /**
+    * @param ticketTitel Titel des Tickets (max. 20)
+    * @param ticketBeschreibung Beschreibung des Tickets (max. 256)
+    * @param ticketStart Startdatum als String mit Inhalt Date
+    * @param ticketEnde Endedatum als String mit Inhalt Date
+    * @param userID ID fuer die Tabelle User (>0)
+    * @param projektID ID fuer die Tabelle Projekte
+    * @param statusID ID fuer die Tabelle Statie
+    * @param prioritaetID ID fuer die Tabelle Prioritaeten
+    * @return gibt true zurueck, wenn das Ticket erfolgreich angelegt wurde
+    */
+    public boolean setNewTicket(String ticketTitel, String ticketBeschreibung, String ticketStart, String ticketEnde, int userID, int projektID, int statusID, int prioritaetID){
+        boolean feedback = true;
+
+        this.logger.addToLogFile(this.getClass().getSimpleName(), "Neues Ticket anlegen ... Titel: " + ticketTitel , LogLevel.LoggingLevel.DEBUG);
+        if (userID <1 || projektID <1 || prioritaetID <1 || statusID <1){
+            this.logger.addToLogFile(this.getClass().getSimpleName(), "Neues Ticket nicht angelegt ... Es fehlen Angaben. ", LogLevel.LoggingLevel.WARNING);
+            feedback = false;
+        }
+        if (feedback){
+          this.mySQL.connect();
+            if(this.mySQL.isConnected()){
+                    this.mySQL.doUpdate("INSERT INTO tickets VALUES (NULL, '" + ticketTitel + "', '" + ticketBeschreibung + "', '" + tools.tryParseDateYyyyMMddToDateTime(ticketStart, "setNewTicket-Start") + "', '" + tools.tryParseDateYyyyMMddToDateTime(ticketEnde,"setNewTicket-Ende") +"', " + tools.getTimeStamp("setNewTicket-TimeStamp") + ", " + 0 + ", " + userID + ", " + projektID + ", " + statusID + ", " + prioritaetID + ")");
+                    this.mySQL.disconnect();
+                }  else {
+                this.logger.addToLogFile(this.getClass().getSimpleName(), "Neues Ticket nicht angelegt ... Konnektion zur Datenbank nicht gelungen.", LogLevel.LoggingLevel.ERROR);
+                feedback = false;
+            }
+        }
+        return feedback;
+    }
+
+    /**
+    * @param antwortTitel Titel der Antwort (max. 20)
+    * @param antwortBeschreibung Beschreibung der Antwort (max. 256)
+    * @param userID ID fuer die Tabelle User (>0)
+    * @param ticketID ID fuer die Tabelle Tickets
+    * @return gibt true zurueck, wenn die Antwort erfolgreich angelegt wurde
+    */
+    public boolean setNewTicket(String antwortTitel, String antwortBeschreibung, int userID, int ticketID){
+        boolean feedback = true;
+        this.logger.addToLogFile(this.getClass().getSimpleName(), "Neue Antwort anlegen ... Titel: " + antwortTitel , LogLevel.LoggingLevel.DEBUG);
+        if (userID <1 || ticketID <1){
+            this.logger.addToLogFile(this.getClass().getSimpleName(), "Neue Antwort nicht angelegt ... Es fehlen Angaben. ", LogLevel.LoggingLevel.WARNING);
+            feedback = false;
+        }
+        if (feedback){
+          this.mySQL.connect();
+            if(this.mySQL.isConnected()){
+                    this.mySQL.doUpdate("INSERT INTO antworten VALUES (NULL, '" + antwortTitel + "', '" + antwortBeschreibung + "', '" + tools.getTimeStamp("setNewAnswer-TimeStamp") + ", " + 0 + ", " + userID + ", " + ticketID + ", " + 0 + ")");
+                    this.mySQL.disconnect();
+                }  else {
+                this.logger.addToLogFile(this.getClass().getSimpleName(), "NeueAntwort nicht angelegt ... Konnektion zur Datenbank nicht gelungen.", LogLevel.LoggingLevel.ERROR);
+                feedback = false;
+            }
+        }
+        return feedback;
+    }
+    
+    /**
+    * @param userID userID des zu loeschenden Users
+    * @return gibt true zurueck, wenn der Benutzer geloescht wurde
+    */
+    private boolean deleteUser(int userID){
+        boolean feedback = false;
+        //Pruefungen fehlen noch
+        this.mySQL.connect();
+        this.mySQL.doUpdate("delete FROM users WHERE userID = '" + userID +"'");
+        this.mySQL.disconnect();
+        //this.logger.addToLogFile(this.getClass().getSimpleName(), "Benutzer loeschen, Fehler in Abfrage! ", LogLevel.LoggingLevel.ERROR);
+        feedback = true;
+        return feedback;
+    }
+    /**
+    * @param answerID ID der zu loeschenden Antwort
+    * @return gibt true zurueck, wenn die Antwort geloescht wurde
+    */
+    private boolean deleteAnswer(int answerID){
+        boolean feedback = false;
+        //Pruefungen fehlen noch
+        this.mySQL.connect();
+        this.mySQL.doUpdate("delete FROM antworten WHERE antwortID = '" + answerID +"'");
+        this.mySQL.disconnect();
+        //this.logger.addToLogFile(this.getClass().getSimpleName(), "Antwort loeschen, Fehler in Abfrage! ", LogLevel.LoggingLevel.ERROR);
+        feedback = true;
+        return feedback;
+    }
+    /**
+    * @param ticketID ID des zu loeschenden Tickets
+    * @return gibt true zurueck, wenn das Ticket geloescht wurde
+    */
+    private boolean deleteTicket(int ticketID){
+        boolean feedback = false;
+        //Pruefungen fehlen noch
+        this.mySQL.connect();
+        this.mySQL.doUpdate("delete FROM tickets WHERE ticketID = '" + ticketID +"'");
+        this.mySQL.disconnect();
+        //this.logger.addToLogFile(this.getClass().getSimpleName(), "Ticket loeschen, Fehler in Abfrage! ", LogLevel.LoggingLevel.ERROR);
+        feedback = true;
+        return feedback;
+    }
+    /**
+    * @return Es werden alle Datensaetze der Tabelle tickets in einem ResultSet zuruck gegeben.
+    */
+    public ResultSet getAllTickets(){
+        ResultSet rs = null;
+        this.logger.addToLogFile(this.getClass().getSimpleName(), "Lese alle Datensaetze der Tabelle tickets ..." , LogLevel.LoggingLevel.DEBUG);
+        this.mySQL.connect();
+            if(this.mySQL.isConnected()){
+                rs = this.mySQL.doQuery("SELECT * FROM tickets");
+                this.mySQL.disconnect();
+            } else {
+                this.logger.addToLogFile(this.getClass().getSimpleName(), "Lesen aller Datensaetze tickets nicht moeglich ... Konnektion zur Datenbank nicht gelungen.", LogLevel.LoggingLevel.ERROR);
+            }
+        return rs;
+    }
+
 }
