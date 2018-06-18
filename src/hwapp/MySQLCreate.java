@@ -43,6 +43,7 @@ public class MySQLCreate {
     public void createTables() {
         MySQL mySQLCreateTables = new MySQL(this.logger, "localhost", 3306, this.databaseName, this.user, this.password);
         mySQLCreateTables.connect();
+        mySQLCreateTables.setAutoCommit(false);
 
         mySQLCreateTables.doUpdate("CREATE TABLE IF NOT EXISTS `users` "
                 + "(`userID` int(10) unsigned NOT NULL AUTO_INCREMENT, "
@@ -52,9 +53,11 @@ public class MySQLCreate {
                 + "`userPasswort` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL, "
     //            + "`userIMEI` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL, "
                 + "`userDarfMMC` tinyint unsigned DEFAULT NULL, "
-                + "PRIMARY KEY (`userID`) )"
+                + "PRIMARY KEY (`userID`) ) "
+                + "ENGINE=InnoDB DEFAULT CHARSET=utf8;"
                 );
-
+        mySQLCreateTables.setSavepoint("afterUsers");
+        
         mySQLCreateTables.doUpdate("CREATE TABLE IF NOT EXISTS `devices` "
                 + "(`deviceID` int(10) unsigned NOT NULL AUTO_INCREMENT, "
                 + "`deviceIMEI` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL, "
@@ -194,7 +197,9 @@ public class MySQLCreate {
                 + "CONSTRAINT `USERIDA-FK` FOREIGN KEY (`userID`) REFERENCES `users` (`userID`), "
                 + "CONSTRAINT `TICKETIDA-FK` FOREIGN KEY (`ticketID`) REFERENCES `tickets` (`ticketID`) )"
                 );
-        
+
+        mySQLCreateTables.commit();
+        mySQLCreateTables.setAutoCommit(true);
         mySQLCreateTables.disconnect();
         mySQLCreateTables = null;
     }
