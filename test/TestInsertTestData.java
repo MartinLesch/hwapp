@@ -2,6 +2,7 @@
 import hwapp.LogLevel;
 import hwapp.Logger;
 import hwapp.MySQL;
+import hwapp.Tools;
 
 /*
  * (C) VIF3 - Email: info@bbs2-leer.de
@@ -23,10 +24,13 @@ public class TestInsertTestData {
         String passwort = "";
         String user = "root";
         String dbn = "hwapp";
+        String warnung = null;
         
         Logger logger = new Logger(LogLevel.LoggingLevel.INFO, true, true , true, false, true, false);
         //Tools tools = new Tools(logger);
-        
+        Tools tools = new Tools(logger);
+        tools.setEnvrionment();
+          
         MySQL mySQL = new MySQL(logger, "localhost", 3306, dbn, user, passwort);
         mySQL.connect();
         mySQL.setAutoCommit(false);
@@ -59,7 +63,7 @@ public class TestInsertTestData {
         mySQL.doUpdate("INSERT INTO submerkmale VALUES (NULL, 'Obergeschoss')");
         mySQL.doUpdate("INSERT INTO submerkmale VALUES (NULL, 'Keller')");
         
-        mySQL.setSavepoint("afterSubMerkmale");
+        mySQL.setSavepoint("lastAktion");
         
         mySQL.doUpdate("INSERT INTO projekte VALUES (1, 'Testprojekt XYZ')");
         mySQL.doUpdate("INSERT INTO projekte VALUES (2, 'Musterprojekt ABC')");
@@ -67,8 +71,20 @@ public class TestInsertTestData {
         mySQL.doUpdate("INSERT INTO tickets VALUES (NULL, 'Tor defekt', 'Testbeschreibung Tor geht nicht mehr auf', '2018-05-01', NULL, NULL, 0, 1, 1, 1, 2)");
         mySQL.doUpdate("INSERT INTO tickets VALUES (NULL, 'Motor defekt', 'Testbeschreibung Motor tut nicht mehr', '2018-05-01', '2018-05-02 11:11:11', NULL, 0, 2, 2, 3, 3)");
 
+        mySQL.setSavepoint("lastAktion");
+        if (mySQL.getWarning() != null) {
+            logger.addToLogFile("testinserttestdata", "1SQL meldet Warnung: " + mySQL.getWarning(), LogLevel.LoggingLevel.DEBUG);
+            mySQL.rollback("lastAktion");
+        }
         mySQL.doUpdate("INSERT INTO zuordnungmerkmaletickets VALUES (1, 1, 1)");
+        mySQL.setSavepoint("lastAktion");
+
         mySQL.doUpdate("INSERT INTO zuordnungmerkmaletickets VALUES (2, 4, 1)");
+        mySQL.setSavepoint("lastAktion");
+        if (mySQL.getWarning() != null) {
+            logger.addToLogFile("testinserttestdata", "1SQL meldet Warnung: " + mySQL.getWarning(), LogLevel.LoggingLevel.DEBUG);
+            mySQL.rollback("lastAktion");
+        }
         mySQL.doUpdate("INSERT INTO zuordnungmerkmaletickets VALUES (3, 6, 1)");
         mySQL.doUpdate("INSERT INTO zuordnungmerkmaletickets VALUES (1, 1, 2)");
         mySQL.doUpdate("INSERT INTO zuordnungmerkmaletickets VALUES (3, 7, 2)");
@@ -104,8 +120,14 @@ public class TestInsertTestData {
 
         mySQL.doUpdate("INSERT INTO antworten VALUES (NULL, 'Antwort zu Ticket 2', 'Motor braucht Oel', NULL, 0, 1, 2, 1)");
         
-        mySQL.rollback("afterSubMerkmale");
+        mySQL.rollback("lastAktion");
         mySQL.commit();
+        if (mySQL.getWarning() != null) {
+            logger.addToLogFile("testinserttestdata", "3SQL meldet Warnung: " + mySQL.getWarning(), LogLevel.LoggingLevel.DEBUG);
+            mySQL.rollback("lastAktion");
+        }
+        logger.addToLogFile("testinserttestdata", "4SQL getWarnung: " + mySQL.getWarning(), LogLevel.LoggingLevel.DEBUG);
+
         mySQL.setAutoCommit(true);
    
         mySQL.disconnect();

@@ -54,6 +54,19 @@ public class MySQL {
             logger.addToLogFile(this.getClass().getSimpleName(), "Kann Automatischen Commit nicht auf den gewuenschten Wert setzen: " + autoCommit + " - " + ex, LogLevel.LoggingLevel.WARNING);
         }
     }
+    public String getWarning(){
+        String resultString = null;
+        try {
+            for(SQLWarning w = connection.getWarnings(); w != null; w = w.getNextWarning()) {
+                logger.addToLogFile(this.getClass().getSimpleName(), "Warnung: " + w.getMessage(), LogLevel.LoggingLevel.INFO);
+                resultString = w.getMessage();
+                //this.connection.clearWarnings();
+            }
+        } catch (SQLException ex) {
+                logger.addToLogFile(this.getClass().getSimpleName(), "Warnungsmeldung kann nicht abgerufen werden: " + ex, LogLevel.LoggingLevel.INFO);
+        }
+        return resultString;
+    }
     public void commit(){
         try {
             connection.commit();
@@ -106,10 +119,15 @@ public class MySQL {
             if (!this.connection.getAutoCommit()) {
                 this.connection.commit();
             }
+        } catch (SQLException ex) {
+            logger.addToLogFile(this.getClass().getSimpleName(), "Fehler beim Commit. " + ex, LogLevel.LoggingLevel.ERROR);
+        }
+
+        try {
             connection.close();
             logger.addToLogFile(this.getClass().getSimpleName(), "Verbindung zu MySQL getrennt." , LogLevel.LoggingLevel.INFO);
         } catch (SQLException ex) {
-            logger.addToLogFile(this.getClass().getSimpleName(), "Fehler beim trennen der Verbindung zu MySQL oder Commit." , LogLevel.LoggingLevel.ERROR);
+            logger.addToLogFile(this.getClass().getSimpleName(), "Fehler beim trennen der Verbindung zu MySQL." , LogLevel.LoggingLevel.ERROR);
             //ex.printStackTrace();
         }
     }
