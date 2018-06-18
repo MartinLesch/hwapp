@@ -7,6 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
@@ -26,6 +27,7 @@ public class MySQL {
     private Statement stmt = null;
     private int status;
     private hwapp.Logger logger;
+    private Savepoint savepoint;
 
     public MySQL(Logger logger, String host, int port, String database, String username, String password) {
         this.host = host;
@@ -43,6 +45,45 @@ public class MySQL {
 
     public int getStatus() {
         return this.status;
+    }
+    
+    public void setAutoCommit(boolean autoCommit) {
+        try {
+            this.connection.setAutoCommit(autoCommit);
+        } catch (SQLException ex) {
+            logger.addToLogFile(this.getClass().getSimpleName(), "Kann Automatischen Commit nicht auf den gewuenschten Wert setzen: " + autoCommit + " - " + ex, LogLevel.LoggingLevel.WARNING);
+        }
+    }
+    public void commit(){
+        try {
+            connection.commit();
+        } catch (SQLException ex) {
+            logger.addToLogFile(this.getClass().getSimpleName(), "Fehler bei Commit. " + ex, LogLevel.LoggingLevel.WARNING);
+        }
+    }
+
+    public void setSavepoint(String savepointName) {
+        try {
+            this.savepoint = this.connection.setSavepoint(savepointName);
+        } catch (SQLException ex) {
+            logger.addToLogFile(this.getClass().getSimpleName(), "Kann Savepoint nicht setzen: " + savepointName + " - " + ex, LogLevel.LoggingLevel.WARNING);
+        }
+    }
+    
+    public void rollback() {
+        try {
+            this.connection.rollback();
+        } catch (SQLException ex) {
+            logger.addToLogFile(this.getClass().getSimpleName(), "Rueckgaengig machen der letzten Transaktion nicht moeglich. " + ex, LogLevel.LoggingLevel.WARNING);
+        }
+    }
+    
+    public void rollback(String savepointName) {
+        try {
+          this.connection.rollback(this.savepoint);
+        } catch (SQLException ex) {
+            logger.addToLogFile(this.getClass().getSimpleName(), "Rueckgaengig machen der Transaktion bis Savepoint nicht moeglich."  + ex, LogLevel.LoggingLevel.WARNING);
+        }
     }
 
     public void connect() {
@@ -62,10 +103,13 @@ public class MySQL {
 
     public void disconnect() {
         try {
+            if (!this.connection.getAutoCommit()) {
+                this.connection.commit();
+            }
             connection.close();
             logger.addToLogFile(this.getClass().getSimpleName(), "Verbindung zu MySQL getrennt." , LogLevel.LoggingLevel.INFO);
         } catch (SQLException ex) {
-            logger.addToLogFile(this.getClass().getSimpleName(), "Fehler beim trennen der Verbindung zu MySQL." , LogLevel.LoggingLevel.ERROR);
+            logger.addToLogFile(this.getClass().getSimpleName(), "Fehler beim trennen der Verbindung zu MySQL oder Commit." , LogLevel.LoggingLevel.ERROR);
             //ex.printStackTrace();
         }
     }

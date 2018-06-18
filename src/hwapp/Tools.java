@@ -7,6 +7,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import hwapp.LogLevel.LoggingLevel;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Map;
+import java.util.logging.Level;
 
 /**
  *
@@ -19,6 +24,31 @@ public class Tools {
 
     public Tools(Logger logger) {
         this.logger = logger;
+    }
+    
+    public void setEnvrionment(){
+        ProcessBuilder pb = new ProcessBuilder("CMD.exe", "/C", "SET"); 
+        pb.redirectErrorStream(true);
+        Map<String,String> env = pb.environment();
+        //String path = env.get("Path") + ";C:\\xyz\\abc";
+        //env.put("Path", path);
+        env.put("GLOBAL general_log", "ON");
+        Process process = null;
+        try {
+            process = pb.start();
+        } catch (IOException ex) {
+                logger.addToLogFile(this.getClass().getSimpleName(), "Setzen Globale Environment Variable fehlgeschlagen. " +ex , LoggingLevel.ERROR);
+        }
+        BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        String line;
+        try {
+            while ((line = in.readLine()) != null)
+            {
+                System.out.println(line);
+            }
+        } catch (IOException ex) {
+                logger.addToLogFile(this.getClass().getSimpleName(), "Ausgabe der Environment-Variablen fehlgeschlagen. " +ex , LoggingLevel.WARNING);
+        }
     }
 
     public String getTimeStamp(String fromWhere) {

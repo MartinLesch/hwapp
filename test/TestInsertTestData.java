@@ -29,6 +29,7 @@ public class TestInsertTestData {
         
         MySQL mySQL = new MySQL(logger, "localhost", 3306, dbn, user, passwort);
         mySQL.connect();
+        mySQL.setAutoCommit(false);
         
         mySQL.doUpdate("INSERT INTO users VALUES (NULL, 'mm@xyz.de', 'Mustermann', 'Max', 'geheim', 1)");
         mySQL.doUpdate("INSERT INTO users VALUES (NULL, 'mm@xyz.de', 'Musterfrau', 'Maria', 'passwort', 0)");
@@ -57,7 +58,9 @@ public class TestInsertTestData {
         mySQL.doUpdate("INSERT INTO submerkmale VALUES (NULL, 'Erdgeschoss')");
         mySQL.doUpdate("INSERT INTO submerkmale VALUES (NULL, 'Obergeschoss')");
         mySQL.doUpdate("INSERT INTO submerkmale VALUES (NULL, 'Keller')");
-
+        
+        mySQL.setSavepoint("afterSubMerkmale");
+        
         mySQL.doUpdate("INSERT INTO projekte VALUES (1, 'Testprojekt XYZ')");
         mySQL.doUpdate("INSERT INTO projekte VALUES (2, 'Musterprojekt ABC')");
 
@@ -100,6 +103,11 @@ public class TestInsertTestData {
         mySQL.doUpdate("INSERT INTO zuordnungkategorienusers VALUES (1, 2, 2)");
 
         mySQL.doUpdate("INSERT INTO antworten VALUES (NULL, 'Antwort zu Ticket 2', 'Motor braucht Oel', NULL, 0, 1, 2, 1)");
+        
+        mySQL.rollback("afterSubMerkmale");
+        mySQL.commit();
+        mySQL.setAutoCommit(true);
+   
         mySQL.disconnect();
         mySQL = null;
     }
