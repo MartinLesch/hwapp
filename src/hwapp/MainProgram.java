@@ -20,15 +20,16 @@ public class MainProgram {
     public static void main(String[] args) {
         
         Logger logger = new Logger(LoggingLevel.WARNING, true, true , true, false, true, false);
-        //Tools tools = new Tools(logger);
+        Tools tools = new Tools(logger);
+        tools.setEnvrionment();
         
         MySQLCreate createDB = new MySQLCreate(logger);
         createDB.createDatabase();
         createDB.createTables();
         createDB = null;
         
-        ImportUser imU = new ImportUser(logger);
-        imU.getUserData();
+        //ImportUser imU = new ImportUser(logger);
+        //imU.getUserData();
         
     }
 }
